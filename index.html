@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>FinApp</title>
+
+<!-- ── PWA Manifest ── -->
+<link rel="manifest" href="manifest.json"/>
+
+<!-- ── PWA Meta Tags ── -->
+<meta name="theme-color" content="#091420"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="FinApp"/>
+<meta name="application-name" content="FinApp"/>
+<meta name="description" content="Tu app de finanzas personales: cuenta bancaria, bolsa mexicana, educación y noticias económicas."/>
+<meta name="msapplication-TileColor" content="#091420"/>
+<meta name="msapplication-TileImage" content="icons/icon-144.png"/>
+
+<!-- ── Apple Touch Icons ── -->
+<link rel="apple-touch-icon" href="icons/icon-152.png"/>
+<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="apple-touch-icon" sizes="512x512" href="icons/icon-512.png"/>
+
+<!-- ── Favicon ── -->
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,300&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:        #060D14;
+    --screen:    #091420;
+    --card:      #0F1C28;
+    --card2:     #111E2A;
+    --border:    #142030;
+    --accent:    #2A6FC9;
+    --gold:      #E8A217;
+    --red:       #C0392B;
+    --green:     #27AE60;
+    --teal:      #00e5a0;
+    --text:      #D6EAF8;
+    --muted:     #4A7A9B;
+    --dim:       #2A4A62;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+    overflow-x: hidden;
+  }
+
+  /* ── Page header ── */
+  .page-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--text);
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+  .page-sub {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  /* ── Outer screen tabs (above phone) ── */
+  .screen-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .screen-nav button {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .screen-nav button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .screen-nav button:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+
+  /* ── Phone ── */
+  .phone-wrap { position: relative; width: 375px; }
+  .phone-glow {
+    position: absolute; inset: -60px;
+    background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(42,111,201,0.12), transparent 70%);
+    pointer-events: none; z-index: -1;
+  }
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    background: var(--screen);
+    border-radius: 52px;
+    border: 2px solid #1A2E42;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 0 1px #0A1820, 0 40px 100px rgba(0,0,0,0.6), inset 0 0 60px rgba(255,255,255,0.01);
+  }
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 28px;
+    background: #060D14;
+    border-radius: 0 0 20px 20px;
+    z-index: 100;
+  }
+
+  /* ── Screen panels ── */
+  .screen-panel {
+    display: none; width: 100%; height: 100%;
+    overflow: hidden; flex-direction: column;
+  }
+  .screen-panel.active { display: flex; }
+
+  /* ── Status bar ── */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 50px 24px 0;
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .status-icons { display: flex; gap: 5px; align-items: center; font-size: 11px; }
+
+  /* ── Bottom Nav (inside phone) ── */
+  .bottom-nav {
+    flex-shrink: 0;
+    height: 72px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 8px 10px;
+  }
+  .nav-item {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 3px;
+    cursor: pointer; opacity: 0.4;
+    transition: opacity 0.2s;
+    font-size: 9px; color: var(--text);
+    letter-spacing: 0.3px;
+  }
+  .nav-item.active { opacity: 1; }
+  .nav-item .nav-icon { font-size: 20px; }
+  .nav-item .nav-dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--teal); opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .nav-item.active .nav-dot { opacity: 1; }
+
+  /* ────────────────────────────────────────
+     SCREEN: HOME (Bienvenida)
+  ──────────────────────────────────────── */
+  .home-scroll {
+    flex: 1; overflow-y: auto; padding: 18px 20px 16px;
+    scrollbar-width: none;
+  }
+  .home-scroll::-webkit-scrollbar { display: none; }
+
+  .greeting {
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px;
+  }
+  .welcome-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px; color: var(--text);
+    line-height: 1.2; margin-bottom: 28px;
+  }
+  .welcome-title span { color: var(--teal); }
+
+  .menu-card {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    position: relative; overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: slideUp 0.4s both;
+  }
+  .menu-card:nth-child(1) { animation-delay: 0.05s; }
+  .menu-card:nth-child(2) { animation-delay: 0.13s; }
+  .menu-card:nth-child(3) { animation-delay: 0.21s; }
+  .menu-card:nth-child(4) { animation-delay: 0.29s; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .menu-card::before {
+    content: ''; position: absolute; inset: 0; opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .menu-card.bank::before  { background: linear-gradient(135deg, rgba(0,229,160,0.07), transparent); }
+  .menu-card.bolsa::before { background: linear-gradient(135deg, rgba(42,111,201,0.07), transparent); }
+  .menu-card.edu::before   { background: linear-gradient(135deg, rgba(232,162,23,0.07), transparent); }
+  .menu-card.news::before  { background: linear-gradient(135deg, rgba(192,57,43,0.07), transparent); }
+  .menu-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.4); }
+  .menu-card:hover::before { opacity: 1; }
+  .menu-card:active { transform: scale(0.97); }
+
+  .card-icon {
+    width: 50px; height: 50px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+  }
+  .bank  .card-icon { background: rgba(0,229,160,0.12); }
+  .bolsa .card-icon { background: rgba(42,111,201,0.12); }
+  .edu   .card-icon { background: rgba(232,162,23,0.12); }
+  .news  .card-icon { background: rgba(192,57,43,0.12); }
+
+  .card-info h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px;
+  }
+  .card-info p { font-size: 12px; color: var(--muted); }
+  .card-arrow { margin-left: auto; font-size: 18px; color: var(--dim); transition: transform 0.2s, color 0.2s; }
+  .menu-card:hover .card-arrow { transform: translateX(3px); color: var(--text); }
+
+  /* ────────────────────────────────────────
+     SCREEN: BANK
+  ──────────────────────────────────────── */
+  .inner-scroll {
+    flex: 1; overflow-y: auto; padding: 14px 20px 16px;
+    scrollbar-width: none;
+  }
+  .inner-scroll::-webkit-scrollbar { display: none; }
+
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--muted); font-size: 13px; cursor: pointer;
+    margin-bottom: 18px; width: fit-content;
+    transition: color 0.2s;
+  }
+  .back-btn:hover { color: var(--text); }
+  .back-arrow-circle {
+    width: 28px; height: 28px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: var(--text);
+  }
+
+  .balance-card {
+    background: linear-gradient(135deg, #00e5a0 0%, #00b8d4 100%);
+    border-radius: 20px; padding: 24px;
+    margin-bottom: 20px;
+    position: relative; overflow: hidden;
+  }
+  .balance-card::after {
+    content: ''; position: absolute;
+    top: -40px; right: -40px;
+    width: 150px; height: 150px;
+    border-radius: 50%; background: rgba(255,255,255,0.15);
+  }
+  .balance-card::before {
+    content: ''; position: absolute;
+    bottom: -60px; left: 20px;
+    width: 190px; height: 190px;
+    border-radius: 50%; background: rgba(255,255,255,0.08);
+  }
+  .balance-label { font-size: 11px; color: rgba(0,0,0,0.5); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  .balance-amount { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; color: #0a1a14; line-height: 1; margin-bottom: 18px; }
+  .balance-amount sup { font-size: 20px; vertical-align: super; }
+  .card-number { font-size: 12px; color: rgba(0,0,0,0.45); letter-spacing: 0.15em; font-weight: 500; }
+
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px; color: var(--text); margin-bottom: 12px;
+  }
+
+  .actions-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px; margin-bottom: 22px;
+  }
+  .action-btn {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+    cursor: pointer; transition: transform 0.2s;
+  }
+  .action-btn:hover { transform: translateY(-3px); }
+  .action-btn:active { transform: scale(0.93); }
+  .action-circle {
+    width: 50px; height: 50px;
+    border-radius: 14px;
+    background: var(--card2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    border: 1px solid var(--border);
+  }
+  .action-label { font-size: 10px; color: var(--muted); text-align: center; line-height: 1.2; }
+
+  .tx-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    animation: slideUp 0.3s both;
+  }
+  .tx-item:nth-child(1){animation-delay:0.05s} .tx-item:nth-child(2){animation-delay:0.10s}
+  .tx-item:nth-child(3){animation-delay:0.15s} .tx-item:nth-child(4){animation-delay:0.20s}
+  .tx-item:nth-child(5){animation-delay:0.25s}
+  .tx-item:last-child { border-bottom: none; }
+  .tx-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--card2); display: flex; align-items: center;
+    justify-content: center; font-size: 18px; flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+  .tx-info { flex: 1; }
+  .tx-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+  .tx-date { font-size: 11px; color: var(--muted); }
+  .tx-amount { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
+  .tx-amount.neg { color: #f87171; }
+  .tx-amount.pos { color: var(--teal); }
+
+  /* ────────────────────────────────────────
+     SCREEN: BOLSA
+  ──────────────────────────────────────── */
+  .bolsa-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 16px;
+  }
+  .bolsa-index { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
+  .bolsa-value { font-family: 'DM Serif Display', serif; font-size: 30px; color: var(--text); }
+  .bolsa-change {
+    font-size: 12px; font-weight: 700;
+    padding: 4px 10px; border-radius: 8px;
+  }
+  .bolsa-change.up   { background: rgba(0,229,160,0.13); color: var(--teal); }
+  .bolsa-change.down { background: rgba(248,113,113,0.13); color: #f87171; }
+
+  .chart-container {
+    background: var(--card2); border-radius: 18px; padding: 16px;
+    margin-bottom: 16px; border: 1px solid var(--border);
+  }
+  .chart-tabs {
+    display: flex; gap: 3px; margin-bottom: 14px;
+    background: var(--card); border-radius: 9px; padding: 3px;
+  }
+  .chart-tab {
+    flex: 1; text-align: center; font-size: 11px; font-weight: 600;
+    padding: 5px; border-radius: 7px; cursor: pointer;
+    color: var(--muted); transition: all 0.2s;
+  }
+  .chart-tab.active { background: var(--accent); color: white; }
+  canvas#chart { width: 100% !important; height: 130px !important; }
+
+  .stocks-list { display: flex; flex-direction: column; gap: 8px; }
+  .stock-item {
+    background: var(--card2); border-radius: 14px; padding: 13px;
+    display: flex; align-items: center; gap: 12px;
+    border: 1px solid var(--border);
+    animation: slideUp 0.35s both;
+  }
+  .stock-item:nth-child(1){animation-delay:0.05s} .stock-item:nth-child(2){animation-delay:0.10s}
+  .stock-item:nth-child(3){animation-delay:0.15s} .stock-item:nth-child(4){animation-delay:0.20s}
+  .stock-item:nth-child(5){animation-delay:0.25s}
+  .stock-logo {
+    width: 38px; height: 38px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800; font-family: 'Syne', sans-serif;
+    flex-shrink: 0;
+  }
+  .stock-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .stock-full { font-size: 10px; color: var(--muted); }
+  .stock-right { margin-left: auto; text-align: right; }
+  .stock-price { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .stock-pct { font-size: 11px; font-weight: 700; }
+  .up   { color: var(--teal); }
+  .down { color: #f87171; }
+
+  /* ────────────────────────────────────────
+     SCREEN: EDUCACIÓN
+  ──────────────────────────────────────── */
+  .edu-hero {
+    background: linear-gradient(135deg, #0d1f4a 0%, #091420 100%);
+    border-radius: 18px; padding: 22px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(232,162,23,0.18);
+    text-align: center;
+  }
+  .edu-hero .emoji { font-size: 44px; margin-bottom: 10px; }
+  .edu-hero h2 { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); margin-bottom: 6px; }
+  .edu-hero p { font-size: 12px; color: var(--muted); line-height: 1.55; }
+
+  .edu-section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px; color: var(--text); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .course-card {
+    background: var(--card2); border-radius: 14px; padding: 14px;
+    margin-bottom: 8px; border: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: slideUp 0.35s both;
+  }
+  .course-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+  .course-badge {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .course-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .course-meta  { font-size: 11px; color: var(--muted); }
+  .course-level {
+    font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 6px; margin-left: auto; flex-shrink: 0;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .beginner  { background: rgba(0,229,160,0.13);  color: var(--teal); }
+  .medium    { background: rgba(232,162,23,0.13);  color: var(--gold); }
+  .advanced  { background: rgba(248,113,113,0.13); color: #f87171; }
+
+  .rec-card {
+    background: var(--card2); border-radius: 14px; padding: 14px;
+    margin-bottom: 8px; border: 1px solid var(--border);
+    display: flex; gap: 12px; cursor: pointer;
+    transition: transform 0.2s;
+    animation: slideUp 0.35s both;
+  }
+  .rec-card:hover { transform: translateY(-2px); }
+  .rec-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px; color: rgba(232,162,23,0.22); flex-shrink: 0; line-height: 1;
+  }
+  .rec-text h4 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .rec-text p  { font-size: 11px; color: var(--muted); line-height: 1.55; }
+
+  /* ────────────────────────────────────────
+     SCREEN: NEWS FEED (EcoNews)
+  ──────────────────────────────────────── */
+  .top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px 12px; flex-shrink: 0;
+  }
+  .app-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--text); letter-spacing: -0.5px; }
+  .app-sub { font-size: 10px; color: var(--dim); letter-spacing: 1.2px; text-transform: uppercase; margin-top: 1px; }
+
+  .region-btn {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 7px 11px; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .region-btn:hover { border-color: var(--accent); background: #152335; }
+  .region-flag { font-size: 18px; }
+  .region-country { font-size: 12px; font-weight: 600; color: #B8D4E8; line-height: 1.2; }
+  .region-local   { font-size: 10px; color: var(--muted); }
+  .region-chevron { font-size: 14px; color: var(--dim); }
+
+  .cat-tabs {
+    display: flex; padding: 0 20px;
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .cat-tab {
+    padding: 9px 0; margin-right: 18px;
+    font-size: 11px; font-weight: 600; color: var(--dim);
+    letter-spacing: 0.4px; cursor: pointer;
+    border-bottom: 2px solid transparent; transition: all 0.2s; user-select: none;
+  }
+  .cat-tab:hover { color: #7A9AB5; }
+  .cat-tab.active-tab { color: var(--accent); border-bottom-color: var(--accent); }
+  .cat-tab[data-cat="interest-rates"].active-tab { color: var(--gold);  border-bottom-color: var(--gold); }
+  .cat-tab[data-cat="credit"].active-tab         { color: var(--red);   border-bottom-color: var(--red); }
+  .cat-tab[data-cat="economy"].active-tab        { color: var(--green); border-bottom-color: var(--green); }
+
+  .stats-bar {
+    padding: 7px 20px; font-size: 10px; color: var(--dim);
+    letter-spacing: 0.8px; text-transform: uppercase; flex-shrink: 0;
+  }
+
+  .news-list {
+    flex: 1; overflow-y: auto; padding: 4px 0 16px; scrollbar-width: none;
+  }
+  .news-list::-webkit-scrollbar { display: none; }
+
+  .article-card {
+    display: flex; background: var(--card2); border-radius: 14px;
+    margin: 0 14px 9px; overflow: hidden; animation: slideUp 0.4s both;
+    cursor: pointer;
+  }
+  .article-card:nth-child(1){animation-delay:0.05s} .article-card:nth-child(2){animation-delay:0.12s}
+  .article-card:nth-child(3){animation-delay:0.19s} .article-card:nth-child(4){animation-delay:0.26s}
+  .article-card:nth-child(5){animation-delay:0.33s}
+  .article-card.hidden { display: none; }
+  .article-card.highlight { border: 1px solid rgba(42,111,201,0.35); box-shadow: 0 0 20px rgba(42,111,201,0.08); }
+
+  .card-accent { width: 4px; flex-shrink: 0; border-radius: 14px 0 0 14px; }
+  .card-body { flex: 1; padding: 12px 13px; }
+  .card-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .card-source { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+  .card-date   { font-size: 10px; color: var(--dim); }
+  .card-title   { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
+  .card-summary { font-size: 11px; color: #5A8099; line-height: 1.5; margin-bottom: 8px; }
+  .card-footer  { display: flex; align-items: center; justify-content: space-between; }
+  .card-badge {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 3px 7px; border-radius: 6px;
+  }
+  .card-relevance { font-size: 10px; color: var(--dim); }
+
+  .empty-state {
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; padding: 40px 20px;
+    color: var(--dim); font-size: 13px; gap: 8px;
+  }
+  .empty-state.visible { display: flex; }
+  .empty-icon-lg { font-size: 34px; }
+
+  /* ────────────────────────────────────────
+     SCREEN: REGION SELECTOR
+  ──────────────────────────────────────── */
+  .overlay-bg {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 10;
+  }
+  .bottom-sheet {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #0F1923; border-radius: 20px 20px 0 0;
+    padding: 0 20px 24px; z-index: 20;
+    animation: sheetUp 0.35s cubic-bezier(0.34,1.36,0.64,1) both;
+    max-height: 88%; overflow-y: auto; scrollbar-width: none;
+  }
+  .bottom-sheet::-webkit-scrollbar { display: none; }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet-handle { width: 40px; height: 4px; background: #1E3448; border-radius: 2px; margin: 12px auto 18px; }
+  .sheet-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--text); margin-bottom: 3px; }
+  .sheet-sub   { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.4; }
+  .sheet-search {
+    background: #162230; border: 1px solid #1E3448; border-radius: 10px;
+    padding: 8px 13px; color: #888; font-size: 13px; margin-bottom: 8px;
+    font-family: 'DM Sans', sans-serif; width: 100%; display: block;
+  }
+  .country-list { margin-bottom: 4px; }
+  .country-row {
+    display: flex; align-items: center; gap: 10px;
+    background: #162230; border-radius: 10px; padding: 9px 11px;
+    margin-bottom: 4px; cursor: pointer;
+    border: 1px solid transparent; transition: all 0.15s;
+  }
+  .country-row.selected { background: #1A3A5C; border-color: var(--accent); }
+  .country-flag { font-size: 20px; }
+  .country-info { flex: 1; }
+  .country-name { font-size: 13px; font-weight: 500; color: #C5D8E8; }
+  .country-row.selected .country-name { color: #7EC8F0; font-weight: 700; }
+  .country-code { font-size: 10px; color: #587A96; margin-top: 1px; }
+  .country-check { font-size: 14px; color: var(--accent); font-weight: 700; }
+
+  .local-section { margin: 12px 0; }
+  .local-label { font-size: 13px; font-weight: 600; color: #C5D8E8; margin-bottom: 2px; }
+  .local-hint  { font-size: 11px; color: #587A96; margin-bottom: 6px; }
+  .local-input {
+    background: #162230; border: 1px solid #1E3448; border-radius: 10px;
+    padding: 8px 13px; font-size: 12px; color: #7EC8F0;
+    width: 100%; font-family: 'DM Sans', sans-serif;
+  }
+  .apply-btn {
+    background: var(--accent); border-radius: 12px; padding: 13px;
+    text-align: center; color: #fff; font-size: 13px; font-weight: 700;
+    cursor: pointer; margin-top: 6px; font-family: 'DM Sans', sans-serif;
+    border: none; width: 100%; letter-spacing: 0.2px;
+    transition: background 0.2s;
+  }
+  .apply-btn:hover { background: #1a5cb5; }
+
+  /* ────────────────────────────────────────
+     SCREEN: ARTICLE DETAIL
+  ──────────────────────────────────────── */
+  .detail-source-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 20px 12px; flex-shrink: 0;
+  }
+  .detail-source-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
+  .detail-source-name { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; }
+  .detail-date { font-size: 10px; color: var(--dim); margin-left: auto; }
+
+  .detail-scroll { flex: 1; overflow-y: auto; padding: 0 20px 28px; scrollbar-width: none; }
+  .detail-scroll::-webkit-scrollbar { display: none; }
+
+  .detail-category-badge {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    padding: 3px 9px; border-radius: 6px;
+    background: rgba(232,162,23,0.15); color: var(--gold); margin-bottom: 12px;
+  }
+  .detail-title {
+    font-family: 'DM Serif Display', serif; font-size: 21px; color: var(--text);
+    line-height: 1.35; margin-bottom: 14px;
+  }
+  .detail-divider { height: 1px; background: var(--border); margin-bottom: 14px; }
+  .detail-meta { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .meta-chip {
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 5px 9px; font-size: 10px; color: var(--muted);
+  }
+  .meta-chip span { color: var(--text); font-weight: 600; }
+  .detail-body { font-size: 13px; color: #7A9AB5; line-height: 1.75; margin-bottom: 18px; }
+  .detail-body strong { color: #B0CCDE; font-weight: 600; }
+
+  .detail-related-title {
+    font-size: 10px; font-weight: 700; color: var(--dim);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 9px;
+  }
+  .related-card {
+    background: var(--card2); border-radius: 10px; padding: 10px 12px;
+    margin-bottom: 7px; border-left: 3px solid var(--accent);
+  }
+  .related-title { font-size: 12px; font-weight: 600; color: #B8D4E8; line-height: 1.35; margin-bottom: 2px; }
+  .related-meta  { font-size: 10px; color: var(--dim); }
+  .read-btn {
+    background: var(--accent); border-radius: 12px; padding: 13px;
+    text-align: center; color: #fff; font-size: 13px; font-weight: 700;
+    margin-top: 8px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; gap: 7px;
+    transition: background 0.2s;
+  }
+  .read-btn:hover { background: #1a5cb5; }
+
+  /* ── Label ── */
+  .screen-label { margin-top: 20px; font-size: 11px; color: var(--dim); letter-spacing: 1.2px; text-transform: uppercase; text-align: center; }
+
+  /* ── PWA Install Banner ── */
+  .install-banner {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111E2A;
+    border: 1px solid rgba(0,229,160,0.3);
+    border-radius: 16px;
+    padding: 14px 20px;
+    align-items: center;
+    gap: 14px;
+    z-index: 9999;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    min-width: 300px;
+    max-width: 380px;
+    animation: slideUp 0.4s cubic-bezier(0.34,1.36,0.64,1) both;
+  }
+  .install-banner .banner-icon { font-size: 28px; flex-shrink: 0; }
+  .install-banner .banner-text { flex: 1; }
+  .install-banner .banner-text strong { display: block; font-size: 13px; font-weight: 700; color: #D6EAF8; margin-bottom: 2px; }
+  .install-banner .banner-text span   { font-size: 11px; color: #4A7A9B; }
+  .install-banner .banner-install {
+    background: #00e5a0; color: #091420;
+    border: none; border-radius: 10px;
+    padding: 8px 14px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    white-space: nowrap; flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .install-banner .banner-install:hover { background: #00c488; }
+  .install-banner .banner-close {
+    font-size: 18px; color: #4A7A9B; cursor: pointer;
+    flex-shrink: 0; padding: 2px 4px;
+    transition: color 0.2s;
+  }
+  .install-banner .banner-close:hover { color: #D6EAF8; }
+
+  /* ── Update Toast ── */
+  .update-toast {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111E2A;
+    border: 1px solid rgba(42,111,201,0.4);
+    border-radius: 12px;
+    padding: 12px 16px;
+    align-items: center;
+    gap: 12px;
+    z-index: 9999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    min-width: 280px;
+    font-size: 12px; color: #D6EAF8;
+  }
+  .update-toast .toast-reload {
+    background: #2A6FC9; color: white;
+    border: none; border-radius: 8px;
+    padding: 6px 12px; font-size: 11px; font-weight: 700;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+  }
+
+  /* ── Offline indicator ── */
+  .offline-bar {
+    display: none;
+    background: rgba(192,57,43,0.9);
+    color: white; font-size: 11px; font-weight: 600;
+    text-align: center; padding: 6px;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 9998;
+    letter-spacing: 0.5px;
+  }
+  body.offline .offline-bar { display: block; }
+
+</style>
+</head>
+<body>
+
+<h1 class="page-title">FinApp</h1>
+<p class="page-sub">Mobile App Preview</p>
+
+<!-- Outer nav tabs -->
+<div class="screen-nav">
+  <button class="active"  onclick="outerNav('home')">🏠 Inicio</button>
+  <button onclick="outerNav('bank')">🏦 Cuenta</button>
+  <button onclick="outerNav('bolsa')">📈 Bolsa</button>
+  <button onclick="outerNav('edu')">🎓 Educación</button>
+  <button onclick="outerNav('feed')">📰 Noticias</button>
+  <button onclick="outerNav('region')">🌍 Región</button>
+  <button onclick="outerNav('detail')">📄 Artículo</button>
+</div>
+
+<!-- Phone -->
+<div class="phone-wrap">
+  <div class="phone-glow"></div>
+  <div class="phone-frame">
+
+    <!-- ══════════════════════════════
+         HOME
+    ══════════════════════════════ -->
+    <div class="screen-panel active" id="screen-home">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons"><span>▲▲▲</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="home-scroll">
+        <p class="greeting">Buenos días</p>
+        <h1 class="welcome-title">Bienvenido<br><span>de vuelta 👋</span></h1>
+
+        <div class="menu-card bank" onclick="innerNav('bank')">
+          <div class="card-icon">🏦</div>
+          <div class="card-info"><h3>Cuenta Bancaria</h3><p>Saldo, movimientos y más</p></div>
+          <div class="card-arrow">›</div>
+        </div>
+        <div class="menu-card bolsa" onclick="innerNav('bolsa')">
+          <div class="card-icon">📈</div>
+          <div class="card-info"><h3>Bolsa</h3><p>Mercado mexicano en vivo</p></div>
+          <div class="card-arrow">›</div>
+        </div>
+        <div class="menu-card edu" onclick="innerNav('edu')">
+          <div class="card-icon">🎓</div>
+          <div class="card-info"><h3>Educación</h3><p>Cursos y recomendaciones</p></div>
+          <div class="card-arrow">›</div>
+        </div>
+        <div class="menu-card news" onclick="innerNav('feed')">
+          <div class="card-icon">📰</div>
+          <div class="card-info"><h3>EcoNews</h3><p>Tasas, crédito y economía</p></div>
+          <div class="card-arrow">›</div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active" onclick="innerNav('home')"><div class="nav-icon">🏠</div><span>Inicio</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('bank')"><div class="nav-icon">💳</div><span>Cuenta</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('bolsa')"><div class="nav-icon">📈</div><span>Bolsa</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('edu')"><div class="nav-icon">🎓</div><span>Aprende</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('feed')"><div class="nav-icon">📰</div><span>Noticias</span><div class="nav-dot"></div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         BANK
+    ══════════════════════════════ -->
+    <div class="screen-panel" id="screen-bank">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons"><span>▲▲▲</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="inner-scroll">
+        <div class="back-btn" onclick="innerNav('home')"><div class="back-arrow-circle">←</div> Inicio</div>
+
+        <div class="balance-card">
+          <div class="balance-label">Saldo disponible</div>
+          <div class="balance-amount"><sup>$</sup>47,382<span style="font-size:20px">.50</span></div>
+          <div class="card-number">•••• •••• •••• 4821</div>
+        </div>
+
+        <div class="section-title">Acciones rápidas</div>
+        <div class="actions-grid">
+          <div class="action-btn"><div class="action-circle">↑</div><span class="action-label">Enviar</span></div>
+          <div class="action-btn"><div class="action-circle">↓</div><span class="action-label">Recibir</span></div>
+          <div class="action-btn"><div class="action-circle">💳</div><span class="action-label">Tarjeta</span></div>
+          <div class="action-btn"><div class="action-circle">📱</div><span class="action-label">SPEI</span></div>
+          <div class="action-btn"><div class="action-circle">📄</div><span class="action-label">Estado de cuenta</span></div>
+          <div class="action-btn"><div class="action-circle">🔒</div><span class="action-label">Bloquear</span></div>
+          <div class="action-btn"><div class="action-circle">💰</div><span class="action-label">Ahorro</span></div>
+          <div class="action-btn"><div class="action-circle">⚙️</div><span class="action-label">Ajustes</span></div>
+        </div>
+
+        <div class="section-title">Últimos movimientos</div>
+        <div class="tx-item"><div class="tx-icon">🛒</div><div class="tx-info"><div class="tx-name">Walmart México</div><div class="tx-date">Hoy, 10:24 AM</div></div><div class="tx-amount neg">-$843.00</div></div>
+        <div class="tx-item"><div class="tx-icon">💼</div><div class="tx-info"><div class="tx-name">Nómina Empresa</div><div class="tx-date">Ayer, 8:00 AM</div></div><div class="tx-amount pos">+$18,500.00</div></div>
+        <div class="tx-item"><div class="tx-icon">⚡</div><div class="tx-info"><div class="tx-name">CFE Luz</div><div class="tx-date">18 feb, 3:12 PM</div></div><div class="tx-amount neg">-$364.00</div></div>
+        <div class="tx-item"><div class="tx-icon">🍕</div><div class="tx-info"><div class="tx-name">Rappi</div><div class="tx-date">17 feb, 9:40 PM</div></div><div class="tx-amount neg">-$230.00</div></div>
+        <div class="tx-item"><div class="tx-icon">📲</div><div class="tx-info"><div class="tx-name">Transferencia recibida</div><div class="tx-date">16 feb, 6:05 PM</div></div><div class="tx-amount pos">+$2,000.00</div></div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="innerNav('home')"><div class="nav-icon">🏠</div><span>Inicio</span><div class="nav-dot"></div></div>
+        <div class="nav-item active" onclick="innerNav('bank')"><div class="nav-icon">💳</div><span>Cuenta</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('bolsa')"><div class="nav-icon">📈</div><span>Bolsa</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('edu')"><div class="nav-icon">🎓</div><span>Aprende</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('feed')"><div class="nav-icon">📰</div><span>Noticias</span><div class="nav-dot"></div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         BOLSA
+    ══════════════════════════════ -->
+    <div class="screen-panel" id="screen-bolsa">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons"><span>▲▲▲</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="inner-scroll">
+        <div class="back-btn" onclick="innerNav('home')"><div class="back-arrow-circle">←</div> Inicio</div>
+
+        <div class="bolsa-header">
+          <div>
+            <div class="bolsa-index">IPC México (BMV)</div>
+            <div class="bolsa-value" id="ipc-value">54,287.34</div>
+          </div>
+          <div class="bolsa-change up" id="ipc-change">▲ +1.23%</div>
+        </div>
+
+        <div class="chart-container">
+          <div class="chart-tabs">
+            <div class="chart-tab active" onclick="setTab(this,'1D')">1D</div>
+            <div class="chart-tab" onclick="setTab(this,'1S')">1S</div>
+            <div class="chart-tab" onclick="setTab(this,'1M')">1M</div>
+            <div class="chart-tab" onclick="setTab(this,'1A')">1A</div>
+          </div>
+          <canvas id="chart"></canvas>
+        </div>
+
+        <div class="section-title">Principales acciones</div>
+        <div class="stocks-list">
+          <div class="stock-item"><div class="stock-logo" style="background:rgba(255,0,0,0.13);color:#ff4444">A</div><div><div class="stock-name">AMXL</div><div class="stock-full">América Móvil</div></div><div class="stock-right"><div class="stock-price">$14.82</div><div class="stock-pct up">▲ +0.88%</div></div></div>
+          <div class="stock-item"><div class="stock-logo" style="background:rgba(255,165,0,0.13);color:#ffa500">F</div><div><div class="stock-name">FEMSAUBD</div><div class="stock-full">FEMSA</div></div><div class="stock-right"><div class="stock-price">$166.40</div><div class="stock-pct down">▼ -0.42%</div></div></div>
+          <div class="stock-item"><div class="stock-logo" style="background:rgba(0,160,255,0.13);color:#00a0ff">B</div><div><div class="stock-name">BIMBOA</div><div class="stock-full">Grupo Bimbo</div></div><div class="stock-right"><div class="stock-price">$62.95</div><div class="stock-pct up">▲ +1.57%</div></div></div>
+          <div class="stock-item"><div class="stock-logo" style="background:rgba(0,229,160,0.13);color:#00e5a0">W</div><div><div class="stock-name">WALMEX*</div><div class="stock-full">Walmart México</div></div><div class="stock-right"><div class="stock-price">$53.18</div><div class="stock-pct down">▼ -0.19%</div></div></div>
+          <div class="stock-item"><div class="stock-logo" style="background:rgba(148,0,255,0.13);color:#9400ff">G</div><div><div class="stock-name">GFNORTEO</div><div class="stock-full">Banorte</div></div><div class="stock-right"><div class="stock-price">$133.70</div><div class="stock-pct up">▲ +2.10%</div></div></div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="innerNav('home')"><div class="nav-icon">🏠</div><span>Inicio</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('bank')"><div class="nav-icon">💳</div><span>Cuenta</span><div class="nav-dot"></div></div>
+        <div class="nav-item active" onclick="innerNav('bolsa')"><div class="nav-icon">📈</div><span>Bolsa</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('edu')"><div class="nav-icon">🎓</div><span>Aprende</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('feed')"><div class="nav-icon">📰</div><span>Noticias</span><div class="nav-dot"></div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         EDUCACIÓN
+    ══════════════════════════════ -->
+    <div class="screen-panel" id="screen-edu">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons"><span>▲▲▲</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="inner-scroll">
+        <div class="back-btn" onclick="innerNav('home')"><div class="back-arrow-circle">←</div> Inicio</div>
+
+        <div class="edu-hero">
+          <div class="emoji">🎓</div>
+          <h2>Aprende a invertir</h2>
+          <p>Domina las finanzas personales con cursos y recomendaciones para el mercado mexicano.</p>
+        </div>
+
+        <div class="edu-section-title">📚 Cursos</div>
+        <div class="course-card" style="animation-delay:0.05s"><div class="course-badge" style="background:rgba(0,229,160,0.12)">💰</div><div class="course-info"><div class="course-title">Finanzas personales 101</div><div class="course-meta">8 lecciones · 2h 30min</div></div><div class="course-level beginner">Básico</div></div>
+        <div class="course-card" style="animation-delay:0.11s"><div class="course-badge" style="background:rgba(42,111,201,0.12)">📊</div><div class="course-info"><div class="course-title">Intro a la bolsa mexicana</div><div class="course-meta">12 lecciones · 4h 15min</div></div><div class="course-level medium">Medio</div></div>
+        <div class="course-card" style="animation-delay:0.17s"><div class="course-badge" style="background:rgba(232,162,23,0.12)">🏡</div><div class="course-info"><div class="course-title">Inversión en bienes raíces MX</div><div class="course-meta">10 lecciones · 3h 45min</div></div><div class="course-level medium">Medio</div></div>
+        <div class="course-card" style="animation-delay:0.23s"><div class="course-badge" style="background:rgba(248,113,113,0.12)">🤖</div><div class="course-info"><div class="course-title">Análisis técnico avanzado</div><div class="course-meta">15 lecciones · 6h 00min</div></div><div class="course-level advanced">Avanzado</div></div>
+
+        <div class="edu-section-title" style="margin-top:20px">⭐ Recomendaciones</div>
+        <div class="rec-card" style="animation-delay:0.05s"><div class="rec-num">01</div><div class="rec-text"><h4>Empieza con un fondo de emergencia</h4><p>Ahorra 3–6 meses de gastos antes de invertir. Es tu red de seguridad financiera.</p></div></div>
+        <div class="rec-card" style="animation-delay:0.11s"><div class="rec-num">02</div><div class="rec-text"><h4>Diversifica tu portafolio</h4><p>Combina acciones, CETES y fondos de inversión para reducir riesgo.</p></div></div>
+        <div class="rec-card" style="animation-delay:0.17s"><div class="rec-num">03</div><div class="rec-text"><h4>Conoce los CETES</h4><p>Certificados de bajo riesgo ideales para comenzar a invertir en México.</p></div></div>
+        <div class="rec-card" style="animation-delay:0.23s"><div class="rec-num">04</div><div class="rec-text"><h4>Invierte a largo plazo</h4><p>El tiempo en el mercado casi siempre supera al "timing". La paciencia paga.</p></div></div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="innerNav('home')"><div class="nav-icon">🏠</div><span>Inicio</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('bank')"><div class="nav-icon">💳</div><span>Cuenta</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('bolsa')"><div class="nav-icon">📈</div><span>Bolsa</span><div class="nav-dot"></div></div>
+        <div class="nav-item active" onclick="innerNav('edu')"><div class="nav-icon">🎓</div><span>Aprende</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('feed')"><div class="nav-icon">📰</div><span>Noticias</span><div class="nav-dot"></div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         NEWS FEED (EcoNews)
+    ══════════════════════════════ -->
+    <div class="screen-panel" id="screen-feed">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons"><span>▲▲▲</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+
+      <div class="top-bar">
+        <div>
+          <div class="app-title">EcoNews</div>
+          <div class="app-sub">Credit · Rates · Economy</div>
+        </div>
+        <div class="region-btn" onclick="innerNav('region')">
+          <span class="region-flag">🇺🇸</span>
+          <div>
+            <div class="region-country">United States</div>
+            <div class="region-local">Texas, Austin</div>
+          </div>
+          <span class="region-chevron">›</span>
+        </div>
+      </div>
+
+      <div class="cat-tabs">
+        <div class="cat-tab active-tab" data-cat="all"            onclick="filterCat('all')">All</div>
+        <div class="cat-tab"            data-cat="interest-rates" onclick="filterCat('interest-rates')">Rates</div>
+        <div class="cat-tab"            data-cat="credit"         onclick="filterCat('credit')">Credit</div>
+        <div class="cat-tab"            data-cat="economy"        onclick="filterCat('economy')">Economy</div>
+      </div>
+      <div class="stats-bar" id="stats-bar">87 articles · sorted by local relevance</div>
+
+      <div class="news-list" id="news-list">
+        <div class="article-card highlight" data-cat="interest-rates" onclick="innerNav('detail')">
+          <div class="card-accent" style="background:#E8A217"></div>
+          <div class="card-body">
+            <div class="card-header"><span class="card-source">Federal Reserve</span><span class="card-date">Jan 15, 2025</span></div>
+            <div class="card-title">Fed Holds Rates Steady, Signals Two Cuts Possible in 2025</div>
+            <div class="card-summary">The FOMC voted unanimously to maintain the federal funds rate at 5.25–5.5%, citing persistent inflation and a robust labor market.</div>
+            <div class="card-footer"><span class="card-badge" style="background:rgba(232,162,23,0.15);color:#E8A217">Interest Rates</span><span class="card-relevance">Relevance ●●●●●</span></div>
+          </div>
+        </div>
+        <div class="article-card" data-cat="economy">
+          <div class="card-accent" style="background:#27AE60"></div>
+          <div class="card-body">
+            <div class="card-header"><span class="card-source">WSJ Economy</span><span class="card-date">Jan 15, 2025</span></div>
+            <div class="card-title">Texas GDP Growth Outpaces National Average for Third Consecutive Quarter</div>
+            <div class="card-summary">Strong energy sector performance and tech migration to Austin are driving the state's economic expansion.</div>
+            <div class="card-footer"><span class="card-badge" style="background:rgba(39,174,96,0.15);color:#27AE60">Economy</span><span class="card-relevance">Relevance ●●●●○</span></div>
+          </div>
+        </div>
+        <div class="article-card" data-cat="credit">
+          <div class="card-accent" style="background:#C0392B"></div>
+          <div class="card-body">
+            <div class="card-header"><span class="card-source">Reuters Business</span><span class="card-date">Jan 14, 2025</span></div>
+            <div class="card-title">US Consumer Credit Climbs $17.8B in November, Beating Forecasts</div>
+            <div class="card-summary">Revolving credit led by card borrowing surged past expectations, raising questions about household balance sheets heading into 2025.</div>
+            <div class="card-footer"><span class="card-badge" style="background:rgba(192,57,43,0.15);color:#C0392B">Credit</span><span class="card-relevance">Relevance ●●●○○</span></div>
+          </div>
+        </div>
+        <div class="article-card" data-cat="economy">
+          <div class="card-accent" style="background:#27AE60"></div>
+          <div class="card-body">
+            <div class="card-header"><span class="card-source">CNBC Economy</span><span class="card-date">Jan 14, 2025</span></div>
+            <div class="card-title">CPI Rises 0.2% in December, Core Inflation Remains Sticky at 3.3%</div>
+            <div class="card-summary">Shelter costs continued to keep core inflation elevated, complicating the Fed's path toward its 2% target.</div>
+            <div class="card-footer"><span class="card-badge" style="background:rgba(39,174,96,0.15);color:#27AE60">Economy</span><span class="card-relevance">Relevance ●●●○○</span></div>
+          </div>
+        </div>
+        <div class="article-card" data-cat="interest-rates">
+          <div class="card-accent" style="background:#E8A217"></div>
+          <div class="card-body">
+            <div class="card-header"><span class="card-source">Seeking Alpha</span><span class="card-date">Jan 13, 2025</span></div>
+            <div class="card-title">30-Year Mortgage Rate Creeps Back Above 7% as Bond Yields Surge</div>
+            <div class="card-summary">Treasury yields rose sharply on strong jobs data, pushing mortgage rates to a six-month high.</div>
+            <div class="card-footer"><span class="card-badge" style="background:rgba(232,162,23,0.15);color:#E8A217">Interest Rates</span><span class="card-relevance">Relevance ●●●○○</span></div>
+          </div>
+        </div>
+        <div class="article-card" data-cat="credit">
+          <div class="card-accent" style="background:#C0392B"></div>
+          <div class="card-body">
+            <div class="card-header"><span class="card-source">BIS Publications</span><span class="card-date">Jan 12, 2025</span></div>
+            <div class="card-title">Global Credit Conditions Tighten as Banks Raise Lending Standards</div>
+            <div class="card-summary">A BIS survey finds major banks tightened credit for households and businesses for the fourth consecutive quarter.</div>
+            <div class="card-footer"><span class="card-badge" style="background:rgba(192,57,43,0.15);color:#C0392B">Credit</span><span class="card-relevance">Relevance ●●○○○</span></div>
+          </div>
+        </div>
+        <div class="empty-state" id="empty-state"><span class="empty-icon-lg">📭</span><span>No articles in this category</span></div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="innerNav('home')"><div class="nav-icon">🏠</div><span>Inicio</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('bank')"><div class="nav-icon">💳</div><span>Cuenta</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('bolsa')"><div class="nav-icon">📈</div><span>Bolsa</span><div class="nav-dot"></div></div>
+        <div class="nav-item" onclick="innerNav('edu')"><div class="nav-icon">🎓</div><span>Aprende</span><div class="nav-dot"></div></div>
+        <div class="nav-item active" onclick="innerNav('feed')"><div class="nav-icon">📰</div><span>Noticias</span><div class="nav-dot"></div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         REGION SELECTOR
+    ══════════════════════════════ -->
+    <div class="screen-panel" id="screen-region">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons"><span>▲▲▲</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="top-bar" style="opacity:0.35">
+        <div><div class="app-title">EcoNews</div><div class="app-sub">Credit · Rates · Economy</div></div>
+      </div>
+
+      <div class="overlay-bg" onclick="innerNav('feed')"></div>
+      <div class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">Set Your Region</div>
+        <div class="sheet-sub">Select your country for targeted economic &amp; credit news.</div>
+        <input class="sheet-search" placeholder="Search country…" disabled/>
+        <div class="country-list">
+          <div class="country-row selected" data-code="US" data-flag="🇺🇸" data-name="United States" data-local="Texas, Austin" onclick="selectCountry(this)">
+            <span class="country-flag">🇺🇸</span><div class="country-info"><div class="country-name">United States</div><div class="country-code">US · USD</div></div><span class="country-check">✓</span>
+          </div>
+          <div class="country-row" data-code="GB" data-flag="🇬🇧" data-name="United Kingdom" data-local="London" onclick="selectCountry(this)">
+            <span class="country-flag">🇬🇧</span><div class="country-info"><div class="country-name">United Kingdom</div><div class="country-code">GB · GBP</div></div><span class="country-check" style="visibility:hidden">✓</span>
+          </div>
+          <div class="country-row" data-code="EU" data-flag="🇪🇺" data-name="European Union" data-local="" onclick="selectCountry(this)">
+            <span class="country-flag">🇪🇺</span><div class="country-info"><div class="country-name">European Union</div><div class="country-code">EU · EUR</div></div><span class="country-check" style="visibility:hidden">✓</span>
+          </div>
+          <div class="country-row" data-code="CA" data-flag="🇨🇦" data-name="Canada" data-local="Ontario, Toronto" onclick="selectCountry(this)">
+            <span class="country-flag">🇨🇦</span><div class="country-info"><div class="country-name">Canada</div><div class="country-code">CA · CAD</div></div><span class="country-check" style="visibility:hidden">✓</span>
+          </div>
+          <div class="country-row" data-code="MX" data-flag="🇲🇽" data-name="México" data-local="Ciudad de México" onclick="selectCountry(this)">
+            <span class="country-flag">🇲🇽</span><div class="country-info"><div class="country-name">México</div><div class="country-code">MX · MXN</div></div><span class="country-check" style="visibility:hidden">✓</span>
+          </div>
+          <div class="country-row" data-code="IN" data-flag="🇮🇳" data-name="India" data-local="" onclick="selectCountry(this)">
+            <span class="country-flag">🇮🇳</span><div class="country-info"><div class="country-name">India</div><div class="country-code">IN · INR</div></div><span class="country-check" style="visibility:hidden">✓</span>
+          </div>
+        </div>
+        <div class="local-section">
+          <div class="local-label">Local Area <span style="font-weight:400;color:#587A96;font-size:11px">(optional)</span></div>
+          <div class="local-hint">Enter a state, province, or city for hyper-local results.</div>
+          <input class="local-input" id="local-input" value="Texas, Austin" placeholder="e.g. Texas, Austin"/>
+        </div>
+        <button class="apply-btn" id="apply-btn" onclick="applyRegion()">Apply — 🇺🇸 US, Texas, Austin</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         ARTICLE DETAIL
+    ══════════════════════════════ -->
+    <div class="screen-panel" id="screen-detail">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons"><span>▲▲▲</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div style="padding: 12px 20px 0; flex-shrink:0;">
+        <div class="back-btn" onclick="innerNav('feed')"><div class="back-arrow-circle">←</div> Noticias</div>
+      </div>
+      <div class="detail-source-bar">
+        <div class="detail-source-dot"></div>
+        <span class="detail-source-name">Federal Reserve</span>
+        <span class="detail-date">Jan 15, 2025</span>
+      </div>
+      <div class="detail-scroll">
+        <div class="detail-category-badge">Interest Rates</div>
+        <div class="detail-title">Fed Holds Rates Steady, Signals Two Cuts Possible in 2025</div>
+        <div class="detail-divider"></div>
+        <div class="detail-meta">
+          <div class="meta-chip">Region <span>US · Texas</span></div>
+          <div class="meta-chip">Relevance <span>●●●●●</span></div>
+          <div class="meta-chip">Score <span>14</span></div>
+        </div>
+        <div class="detail-body">
+          <strong>Washington D.C.</strong> — The Federal Open Market Committee voted unanimously on Wednesday to hold the federal funds rate at 5.25–5.5%, keeping borrowing costs at a 23-year high as policymakers await further evidence that inflation is returning to target.
+          <br/><br/>
+          Fed Chair Jerome Powell signaled cautious optimism, noting that <strong>the disinflation process is ongoing</strong>, though the path back to 2% remains uncertain. Markets had priced in a slim chance of a cut at this meeting.
+          <br/><br/>
+          The updated dot plot projects <strong>two quarter-point reductions</strong> in 2025, down from the four cuts penciled in at the September meeting — a hawkish revision that sent Treasury yields higher.
+          <br/><br/>
+          <strong>Impact for Texas businesses:</strong> Commercial lending rates tied to the prime rate remain elevated, keeping pressure on small business credit in Austin's expanding tech corridor.
+        </div>
+        <div class="detail-related-title">Related Articles</div>
+        <div class="related-card"><div class="related-title">Texas GDP Growth Outpaces National Average for Third Quarter</div><div class="related-meta">WSJ Economy · Jan 15, 2025</div></div>
+        <div class="related-card" style="border-left-color:#E8A217"><div class="related-title">30-Year Mortgage Rate Creeps Back Above 7% as Bond Yields Surge</div><div class="related-meta">Seeking Alpha · Jan 13, 2025</div></div>
+        <div class="read-btn"><span>🔗</span> Read Full Article</div>
+      </div>
+    </div>
+
+  </div><!-- /phone-frame -->
+</div><!-- /phone-wrap -->
+
+<div class="screen-label" id="screen-label-text">Home Screen — toca las tarjetas o la barra inferior para navegar</div>
+
+<script>
+  // ── State ──────────────────────────────────────────
+  let currentCat    = 'all';
+  let selectedCode  = 'US';
+  let selectedFlag  = '🇺🇸';
+  let selectedName  = 'United States';
+  let selectedLocal = 'Texas, Austin';
+
+  const ALL_SCREENS = ['home','bank','bolsa','edu','feed','region','detail'];
+  const LABELS = {
+    home:   'Home Screen — toca las tarjetas o la barra inferior',
+    bank:   'Cuenta Bancaria — saldo y movimientos',
+    bolsa:  'Bolsa — mercado mexicano en vivo',
+    edu:    'Educación — cursos y recomendaciones',
+    feed:   'EcoNews Feed — filtra por categoría o cambia región',
+    region: 'Region Selector — elige país y aplica',
+    detail: 'Article Detail',
+  };
+  const OUTER_IDX = { home:0, bank:1, bolsa:2, edu:3, feed:4, region:5, detail:6 };
+  const BOTTOM_IDX = { home:0, bank:1, bolsa:2, edu:3, feed:4 };
+
+  function showScreen(name) {
+    ALL_SCREENS.forEach(id => {
+      const el = document.getElementById('screen-' + id);
+      if (el) el.classList.toggle('active', id === name);
+    });
+    document.getElementById('screen-label-text').textContent = LABELS[name] || name;
+
+    // Outer tabs
+    document.querySelectorAll('.screen-nav button').forEach((b, i) => {
+      b.classList.toggle('active', i === OUTER_IDX[name]);
+    });
+
+    if (name === 'bolsa') setTimeout(drawChart, 80);
+  }
+
+  // innerNav = navigate from inside the phone (also updates outer tabs)
+  function innerNav(name) { showScreen(name); }
+  // outerNav = same but from the buttons above
+  function outerNav(name) { showScreen(name); }
+
+  // ── Category filter ────────────────────────────────
+  function filterCat(cat) {
+    currentCat = cat;
+    document.querySelectorAll('.cat-tab').forEach(t => {
+      t.classList.toggle('active-tab', t.dataset.cat === cat);
+    });
+    const cards = document.querySelectorAll('#news-list .article-card');
+    let visible = 0;
+    cards.forEach(card => {
+      const match = cat === 'all' || card.dataset.cat === cat;
+      card.classList.toggle('hidden', !match);
+      if (match) visible++;
+    });
+    document.getElementById('empty-state').classList.toggle('visible', visible === 0);
+    const label = { all:'All','interest-rates':'Rates',credit:'Credit',economy:'Economy' }[cat];
+    document.getElementById('stats-bar').textContent =
+      visible === 0
+        ? `No articles · ${label}`
+        : `${visible} article${visible > 1 ? 's' : ''} · ${label !== 'All' ? label + ' · ' : ''}sorted by local relevance`;
+  }
+
+  // ── Country selection ──────────────────────────────
+  function selectCountry(row) {
+    document.querySelectorAll('.country-row').forEach(r => {
+      r.classList.remove('selected');
+      r.querySelector('.country-check').style.visibility = 'hidden';
+    });
+    row.classList.add('selected');
+    row.querySelector('.country-check').style.visibility = 'visible';
+    selectedCode  = row.dataset.code;
+    selectedFlag  = row.dataset.flag;
+    selectedName  = row.dataset.name;
+    selectedLocal = row.dataset.local;
+    document.getElementById('local-input').value = selectedLocal;
+    updateApplyBtn();
+  }
+
+  document.getElementById('local-input').addEventListener('input', function() {
+    selectedLocal = this.value;
+    updateApplyBtn();
+  });
+
+  function updateApplyBtn() {
+    const local = selectedLocal.trim();
+    document.getElementById('apply-btn').textContent = local
+      ? `Apply — ${selectedFlag} ${selectedCode}, ${local}`
+      : `Apply — ${selectedFlag} ${selectedCode}`;
+  }
+
+  function applyRegion() {
+    selectedLocal = document.getElementById('local-input').value.trim();
+    document.querySelector('.region-flag').textContent    = selectedFlag;
+    document.querySelector('.region-country').textContent = selectedName;
+    document.querySelector('.region-local').textContent   = selectedLocal || '';
+    filterCat('all');
+    innerNav('feed');
+  }
+
+  // ── Bolsa chart ────────────────────────────────────
+  function setTab(el, period) {
+    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    drawChart(period);
+  }
+
+  function drawChart(period = '1D') {
+    const canvas = document.getElementById('chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width  = canvas.offsetWidth * 2;
+    canvas.height = 260;
+    canvas.style.height = '130px';
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const points = genData(period);
+    const min = Math.min(...points) * 0.998;
+    const max = Math.max(...points) * 1.002;
+    const px = i => (i / (points.length - 1)) * w;
+    const py = v => h - ((v - min) / (max - min)) * (h * 0.85) - h * 0.05;
+
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, 'rgba(0,229,160,0.32)');
+    grad.addColorStop(1, 'rgba(0,229,160,0)');
+
+    ctx.beginPath();
+    ctx.moveTo(px(0), h);
+    ctx.lineTo(px(0), py(points[0]));
+    for (let i = 1; i < points.length; i++) {
+      const cx = (px(i-1) + px(i)) / 2;
+      ctx.bezierCurveTo(cx, py(points[i-1]), cx, py(points[i]), px(i), py(points[i]));
+    }
+    ctx.lineTo(px(points.length-1), h);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(px(0), py(points[0]));
+    for (let i = 1; i < points.length; i++) {
+      const cx = (px(i-1) + px(i)) / 2;
+      ctx.bezierCurveTo(cx, py(points[i-1]), cx, py(points[i]), px(i), py(points[i]));
+    }
+    ctx.strokeStyle = '#00e5a0';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    const lx = px(points.length-1), ly = py(points[points.length-1]);
+    ctx.beginPath(); ctx.arc(lx, ly, 5, 0, Math.PI*2);
+    ctx.fillStyle = '#00e5a0'; ctx.fill();
+    ctx.beginPath(); ctx.arc(lx, ly, 9, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(0,229,160,0.25)'; ctx.fill();
+  }
+
+  function genData(period) {
+    const n = { '1D':48, '1S':7, '1M':30, '1A':52 }[period] || 48;
+    const d = [54000];
+    for (let i = 1; i < n; i++) d.push(d[i-1] + (Math.random()-0.48)*300);
+    return d;
+  }
+
+  // Live IPC ticker
+  setInterval(() => {
+    const base = 54287.34, v = (Math.random()-0.5)*200;
+    const val = (base + v).toFixed(2);
+    const pct = (v/base*100).toFixed(2);
+    const el = document.getElementById('ipc-value');
+    const ch = document.getElementById('ipc-change');
+    if (el) el.textContent = parseFloat(val).toLocaleString('es-MX', {minimumFractionDigits:2});
+    if (ch) {
+      ch.textContent = (v >= 0 ? '▲ +' : '▼ ') + Math.abs(pct) + '%';
+      ch.className = 'bolsa-change ' + (v >= 0 ? 'up' : 'down');
+    }
+  }, 4000);
+</script>
+
+<!-- ── PWA: Install Banner ── -->
+<div class="install-banner" id="install-btn">
+  <div class="banner-icon">📲</div>
+  <div class="banner-text">
+    <strong>Instalar FinApp</strong>
+    <span>Añadir a pantalla de inicio</span>
+  </div>
+  <button class="banner-install">Instalar</button>
+  <span class="banner-close" onclick="document.getElementById('install-btn').style.display='none'">✕</span>
+</div>
+
+<!-- ── PWA: Update Toast ── -->
+<div class="update-toast" id="update-toast">
+  <span>🔄 Nueva versión disponible</span>
+  <button class="toast-reload">Actualizar</button>
+</div>
+
+<!-- ── PWA: Offline Bar ── -->
+<div class="offline-bar">📵 Sin conexión — mostrando datos guardados</div>
+
+<!-- ── Offline detection ── -->
+<script>
+  function updateOnlineStatus() {
+    document.body.classList.toggle('offline', !navigator.onLine);
+  }
+  window.addEventListener('online',  updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  updateOnlineStatus();
+</script>
+
+<!-- ── PWA: Service Worker Registration ── -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => {
+          console.log('[FinApp] Service Worker registrado:', reg.scope);
+
+          // Notify user of updates
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showUpdateToast();
+              }
+            });
+          });
+        })
+        .catch(err => console.warn('[FinApp] SW error:', err));
+    });
+  }
+
+  // ── Install prompt (Add to Home Screen) ───────────────
+  let deferredPrompt;
+  const installBtn = document.getElementById('install-btn');
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn) {
+      installBtn.style.display = 'flex';
+      installBtn.addEventListener('click', async () => {
+        installBtn.style.display = 'none';
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log('[FinApp] Install outcome:', outcome);
+        deferredPrompt = null;
+      });
+    }
+  });
+
+  window.addEventListener('appinstalled', () => {
+    console.log('[FinApp] App instalada exitosamente');
+    if (installBtn) installBtn.style.display = 'none';
+  });
+
+  // ── Update toast ───────────────────────────────────────
+  function showUpdateToast() {
+    const toast = document.getElementById('update-toast');
+    if (toast) {
+      toast.style.display = 'flex';
+      toast.querySelector('.toast-reload').addEventListener('click', () => {
+        navigator.serviceWorker.controller?.postMessage({ type: 'SKIP_WAITING' });
+        window.location.reload();
+      });
+    }
+  }
+</script>
+</body>
+</html>
